@@ -1,5 +1,5 @@
 describe('git', function() {
-  
+
   var git = require('../lib/git');
 
   describe('parseRawCommit', function() {
@@ -8,7 +8,7 @@ describe('git', function() {
       var msg;
       msg = git.parseRawCommit(
         '9b1aff905b638aa274a5fc8f88662df446d374bd\n' +
-        'feat(scope): broadcast $destroy event on scope destruction\n' + 
+        'feat(scope): broadcast $destroy event on scope destruction\n' +
         'perf testing shows that in chrome this change adds 5-15% overhead\n' +
         'when destroying 10k nested scopes where each scope has a $destroy listener\n'
       );
@@ -59,11 +59,18 @@ describe('git', function() {
         expect(msg.closes).to.deep.equal([24]);
         expect(msg.subject).to.equal('Whatever');
       });
+      it('should parse a message subject with parens in it', function() {
+        var msg = git.parseRawCommit(
+          '13f31602f396bc269076ab4d389cfd8ca94b20ba\n' +
+          'fix(yyy): Such commit (wow)\n'
+        );
+        expect(msg.subject).to.equal('Such commit (wow)');
+      });
       it('should parse multiple comma-separated issues closed with ' + closeWord + ' #1, #2', function() {
         var msg = git.parseRawCommit(
           '13f31602f396bc269076ab4d389cfd8ca94b20ba\n' +
           'fix(yyy): Very cool commit\n' +
-          'bla bla bla\n\n' + 
+          'bla bla bla\n\n' +
           closeWord + ' #1, #22, #33\n' +
           'What not ?\n'
         );
@@ -75,7 +82,7 @@ describe('git', function() {
       var msg = git.parseRawCommit(
         '13f31602f396bc269076ab4d389cfd8ca94b20ba\n' +
         'fix(zzz): Very cool commit\n' +
-        'bla bla bla\n\n' + 
+        'bla bla bla\n\n' +
         'Closes #2, #3. Resolves #4. Fixes #5. Fixes #6.\n' +
         'What not ?\n'
       );
@@ -86,7 +93,7 @@ describe('git', function() {
       var msg = git.parseRawCommit(
         '13f31602f396bc269076ab4d389cfd8ca94b20ba\n' +
         'chore: some chore\n' +
-        'bla bla bla\n\n' + 
+        'bla bla bla\n\n' +
         'BREAKING CHANGE: some breaking change\n'
       );
       expect(msg.type).to.equal('chore');
@@ -98,6 +105,15 @@ describe('git', function() {
         'chore(scope with spaces): some chore\n' +
         'bla bla bla\n\n' +
         'BREAKING CHANGE: some breaking change\n'
+      );
+      expect(msg.type).to.equal('chore');
+      expect(msg.subject).to.equal('some chore');
+      expect(msg.component).to.equal('scope with spaces');
+    });
+    it('should parse a commit which does not have a colon', function() {
+      var msg = git.parseRawCommit(
+        '13f31602f396bc269076ab4d389cfd8ca94b20ba\n' +
+        'chore(scope with spaces) some chore\n'
       );
       expect(msg.type).to.equal('chore');
       expect(msg.subject).to.equal('some chore');
